@@ -71,3 +71,35 @@ if args.epochs:
     epochs = args.epochs
 if args.gpu:
     device = 'cuda'
+
+
+data_dir = 'flowers'
+train_dir = data_dir + '/train'
+valid_dir = data_dir + '/valid'
+test_dir = data_dir + '/test'
+
+train_transforms = transforms.Compose([transforms.RandomRotation(30),
+                                       transforms.RandomResizedCrop(224),
+                                       transforms.RandomHorizontalFlip(),
+                                       transforms.ToTensor(),
+                                       transforms.Normalize([0.485, 0.456, 0.406],
+                                                            [0.229, 0.224, 0.225])])
+valid_transforms = transforms.Compose([transforms.Resize(255),
+                                      transforms.CenterCrop(224),
+                                      transforms.ToTensor(),
+                                      transforms.Normalize([0.485, 0.456, 0.406],
+                                                           [0.229, 0.224, 0.225])])
+test_transforms = transforms.Compose([transforms.Resize(255),
+                                      transforms.CenterCrop(224),
+                                      transforms.ToTensor(),
+                                      transforms.Normalize([0.485, 0.456, 0.406],
+                                                           [0.229, 0.224, 0.225])])
+# TODO: Load the datasets with ImageFolder
+image_datasets = {}
+image_datasets['train_data'] = datasets.ImageFolder(train_dir, transform=train_transforms)
+image_datasets['valid_data'] = datasets.ImageFolder(valid_dir, transform=valid_transforms)
+image_datasets['test_data'] = datasets.ImageFolder(test_dir, transform=test_transforms)
+# TODO: Using the image datasets and the trainforms, define the dataloaders
+trainloader = torch.utils.data.DataLoader(image_datasets['train_data'], batch_size=64, shuffle=True)
+validloader = torch.utils.data.DataLoader(image_datasets['valid_data'], batch_size=64)
+testloader = torch.utils.data.DataLoader(image_datasets['test_data'], batch_size=64)
