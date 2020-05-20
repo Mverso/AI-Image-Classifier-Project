@@ -55,3 +55,23 @@ if args.json:
     filepath = args.json
 if args.gpu:
     device = 'cuda'
+
+
+with open(filepath, 'r') as f:
+    flower_to_name = json.load(f)
+
+def load_checkpoint(filepath):
+    '''
+    load model from a checkpoint
+    '''
+
+    checkpoint = torch.load(filepath)
+    model = getattr(torchvision.models, checkpoint['arch'])(pretrained=True)
+    model.classifier = checkpoint['classifier']
+    model.epochs = checkpoint['epochs']
+    model.optimizer = checkpoint['optimizer']
+    model.class_to_idx = checkpoint['class_to_idx']
+    model.load_state_dict(checkpoint['state_dict'])
+
+
+    return model
