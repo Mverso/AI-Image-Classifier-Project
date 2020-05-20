@@ -195,3 +195,31 @@ def train_model(model, criterion, optimizer, epochs=3):
 
 
 trained_model = train_model(model, criterion, optimizer, epochs)
+
+def test_model(model):
+   # Do validation on the test set
+    #if device = 'cpu':
+    model.to(device)
+    #else:
+        #model.to('cuda')
+    test_loss = 0
+    accuracy = 0
+    model.eval()
+    with torch.no_grad():
+        for inputs, labels in testloader:
+            #if device = 'cpu':
+            inputs, labels = inputs.to(device), labels.to(device)
+            #else:
+                #inputs, labels = inputs.to('cuda'), labels.to('cuda')
+            logps = model.forward(inputs)
+            batch_loss = criterion(logps, labels)
+            test_loss += batch_loss.item()
+            # Calculate accuracy
+            ps = torch.exp(logps)
+            top_p, top_class = ps.topk(1, dim=1)
+            equals = top_class == labels.view(*top_class.shape)
+            accuracy += torch.mean(equals.type(torch.FloatTensor)).item()
+            print(f"Test accuracy: {accuracy/len(testloader):.3f}")
+
+test_model(trained_model)
+        
