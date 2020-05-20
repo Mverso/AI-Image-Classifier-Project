@@ -103,3 +103,95 @@ image_datasets['test_data'] = datasets.ImageFolder(test_dir, transform=test_tran
 trainloader = torch.utils.data.DataLoader(image_datasets['train_data'], batch_size=64, shuffle=True)
 validloader = torch.utils.data.DataLoader(image_datasets['valid_data'], batch_size=64)
 testloader = torch.utils.data.DataLoader(image_datasets['test_data'], batch_size=64)
+
+def create_model(arch='densenet121',hidden_units=320,learning_rate=0.003):
+    '''
+    Function builds model
+    '''
+    model =  getattr(models,arch)(pretrained=True)
+    in_features = model.classifier.in_features
+    # Freeze parameters so we don't backprop through them
+    for param in model.parameters():
+        param.requires_grad = False
+
+
+    # Build classifier for model
+    classifier = nn.Sequential(nn.Linear(in_features, hidden_units),
+                                 nn.ReLU(),
+                                 nn.Dropout(0.2),
+                                 nn.Linear(hidden_units, 102),
+                                 nn.LogSoftmax(dim=1))
+    model.classifier = classifier
+
+    criterion = nn.NLLLoss()
+    optimizer = optim.Adam(model.classifier.parameters(),lr=learning_rate)
+
+    #if device = 'cpu':
+    model.to(device)
+    #else:
+        #model = model.to('cuda')
+
+    return model, criterion, optimizer,  classifier
+
+model, criterion, optimizer, classifier = create_model(arch, hidden_units, learning_rate)
+
+def train_model(model, criterion, optimizer, epochs=3):
+    '''
+    Function that trains pretrained model and classifier on image dataset and validates.
+    '''
+    steps = 0
+    running_loss = 0
+    print_every = 5
+
+
+    print_every = 5
+    for epoch in range(epochs):
+        for inputs, labels in trainloader:
+            steps += 1
+            # Move input and label tensors to the default device
+            #if device = 'cpu':
+            inputs, labels = inputs.to(device), labels.to(device)
+            #else:
+                #inputs, labels = inputs.to('cuda'), labels.to('cuda')
+
+            optimizer.zero_grad()
+
+            logps = model.forward(inputs)
+            loss = criterion(logps, labels)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+
+            if steps % print_every == 0:
+                valid_loss = 0
+                accuracy = 0
+                model.eval()
+                with torch.no_grad():
+                    for inputs, labels in validloader:
+                        #if device = 'cpu':
+                        inputs, labels = inputs.to(device), labels.to(device)
+                        #else:
+                            #inputs, labels = inputs.to('cuda'), labels.to('cuda')
+                        logps = model.forward(inputs)
+                        batch_loss = criterion(logps, labels)
+
+                        valid_loss += batch_loss.item()
+
+                        # Calculate accuracy
+                        ps = torch.exp(logps)
+                        top_p, top_class = ps.topk(1, dim=1)
+                        equals = top_class == labels.view(*top_class.shape)
+                        accuracy += torch.mean(equals.type(torch.FloatTensor)).item()
+
+                print(f"Epoch {epoch+1}/{epochs}.. "
+                      f"Train loss: {running_loss/print_every:.3f}.. "
+                      f"Validation loss: {valid_loss/len(validloader):.3f}.. "
+                      f"Validation accuracy: {accuracy/len(validloader):.3f}")
+                running_loss = 0
+                model.train()
+
+    return model
+
+
+
+trained_model = train_model(model, criterion, optimizer, epochs)
