@@ -111,3 +111,43 @@ def process_image(image):
     test_image = test_image.transpose((2, 0, 1))
 
     return test_image
+
+def predict(image_path, model, topk=topk):
+    ''' Predict the class (or classes) of an image using a trained deep learning model.
+
+    image_path: string. Path to image, directly to image and not to folder.
+    model: pytorch neural network.
+    top_k: integer. The top K classes to be calculated
+
+    returns top_probabilities(k), top_labels
+    '''
+
+    model.to("cpu")
+
+    model.eval();
+
+    # Convert image from numpy to torch
+    torch_image = torch.from_numpy(np.expand_dims(process_image(image_path),
+                                                  axis=0)).type(torch.FloatTensor).to("cpu")
+
+    # Find probabilities (results) by passing through the function (note the log softmax means that its on a log scale)
+
+    predictions = model.forward(torch_image)
+    ps = torch.exp(predictions)
+    top_ps, top_class = ps.topk(topk, dim = 1)
+    top_ps = top_ps.detach().numpy().tolist()[0]
+    top_class = top_class.detach().numpy().tolist()[0]
+
+
+    # Convert to classes
+    idx_to_class = {val: key for key, val in
+                                      model.class_to_idx.items()}
+    top_labels = [idx_to_class[lab] for lab in top_class]
+    top_flowers = [flower_to_name[idx_to_class[lab]] for lab in top_class]
+
+
+    return top_ps, top_labels, top_flowers
+
+probs, classes, flowers = predict(image_path, model)
+print(probs)
+print(flowers)
