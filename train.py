@@ -72,7 +72,6 @@ if args.epochs:
 if args.gpu:
     device = 'cuda'
 
-
 data_dir = 'flowers'
 train_dir = data_dir + '/train'
 valid_dir = data_dir + '/valid'
@@ -103,6 +102,8 @@ image_datasets['test_data'] = datasets.ImageFolder(test_dir, transform=test_tran
 trainloader = torch.utils.data.DataLoader(image_datasets['train_data'], batch_size=64, shuffle=True)
 validloader = torch.utils.data.DataLoader(image_datasets['valid_data'], batch_size=64)
 testloader = torch.utils.data.DataLoader(image_datasets['test_data'], batch_size=64)
+
+
 
 def create_model(arch='densenet121',hidden_units=320,learning_rate=0.003):
     '''
@@ -196,6 +197,7 @@ def train_model(model, criterion, optimizer, epochs=3):
 
 trained_model = train_model(model, criterion, optimizer, epochs)
 
+
 def test_model(model):
    # Do validation on the test set
     #if device = 'cpu':
@@ -246,4 +248,3 @@ def save_model(model_trained):
     torch.save(checkpoint, save_dir)
 
 save_model(trained_model)
-    
