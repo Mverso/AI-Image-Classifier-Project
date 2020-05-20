@@ -75,3 +75,39 @@ def load_checkpoint(filepath):
 
 
     return model
+
+model = load_checkpoint(checkpoint)
+if device == 'cuda':
+    model.to('cuda')
+
+
+def process_image(image):
+    test_image = PIL.Image.open(image)
+
+    # Get original dimensions
+    width, height = test_image.size
+
+    # Find shorter size and create settings to crop shortest side to 256
+    if width < height: resize=[256, 10000]
+    else: resize=[10000, 256]
+
+    test_image.thumbnail(size=resize)
+
+    # Find pixels to crop on to create 224x224 image
+    width, height = test_image.size
+    left = (width - 224)/2
+    bottom = (height - 224)/2
+    right = left + 224
+    top = bottom + 224
+
+    test_image = test_image.crop((left, bottom, right, top))
+
+    test_image = np.array(test_image)/255
+    mean = np.array([0.485, 0.456, 0.406]) #provided mean
+    std = np.array([0.229, 0.224, 0.225]) #provided std
+    test_image = (test_image - mean)/std
+
+    # Move color channels to first dimension as expected by PyTorch
+    test_image = test_image.transpose((2, 0, 1))
+
+    return test_image
