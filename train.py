@@ -222,4 +222,28 @@ def test_model(model):
             print(f"Test accuracy: {accuracy/len(testloader):.3f}")
 
 test_model(trained_model)
-        
+
+def save_model(model_trained):
+    '''
+    Function saves the trained model architecture.
+    '''
+    model.class_to_idx = image_datasets['train_data'].class_to_idx
+    save_dir = ''
+    checkpoint = {'input_size': 1024,
+              'output_size': 102,
+              'arch': 'densenet121',
+              'classifier': classifier,
+              'epochs': epochs,
+              'state_dict': model.state_dict(),
+              'optimizer': optimizer.state_dict(),
+              'class_to_idx': model.class_to_idx}
+
+    if args.save_dir:
+        save_dir = args.save_dir
+    else:
+        save_dir = 'checkpoint.pth'
+
+    torch.save(checkpoint, save_dir)
+
+save_model(trained_model)
+    
