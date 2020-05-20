@@ -19,6 +19,7 @@ filepath = 'cat_to_name.json'
 arch=''
 image_path = "flowers/test/10/image_07090.jpg"
 topk = 5
+device = 'cpu'
 
 # Set up parameters for entry in command line
 parser = argparse.ArgumentParser()
